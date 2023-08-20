@@ -18,7 +18,7 @@ export default function Overlay() {
         >
           By{" "}
           <Image
-            src="https://balasolu.com/balasolu.svg"
+            src="/balasolu.svg"
             alt="balasolu logo"
             className="dark:invert"
             width={100}
