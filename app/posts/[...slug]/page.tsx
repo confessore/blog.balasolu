@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { allPosts } from "contentlayer/generated";
 
 import { Metadata } from "next";
-import { Mdx } from "@/components/mdx-components";
+import { Mdx } from "@/components/mdx_components";
 
 interface PostProps {
   params: {
@@ -54,13 +54,13 @@ export default async function PostPage({ params }: PostProps) {
       <h1 className="mb-2">{post.title}</h1>
       {post.description && (
         <>
-        <p className="mt-0 text-xl text-slate-700 dark:text-slate-200">
-          {post.description}
-        </p>
-        <p className="mt-0 text-xs text-slate-700 dark:text-slate-200">
-        {post.date}
-      </p>
-      </>
+          <p className="mt-0 text-xl text-slate-700 dark:text-slate-200">
+            {post.description}
+          </p>
+          <p className="mt-0 text-xs text-slate-700 dark:text-slate-200">
+            {post.date}
+          </p>
+        </>
       )}
       <hr className="my-4" />
       <Mdx code={post.body.code} />
