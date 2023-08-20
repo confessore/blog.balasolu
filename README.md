@@ -1,5 +1,8 @@
-# Next.js + Contentlayer
+# blog.balasolu
 
-A template with Next.js 13 app dir, Contentlayer, Tailwind CSS and dark mode.
+initially focused on scams and fraud
 
-https://next-contentlayer.vercel.app
+plans to branch out to other topics such as
+- tech, of course😂
+- psychology (user experience maybe? 🤔)
+- suggest something!
