@@ -4,6 +4,7 @@ import { Akshar } from "next/font/google";
 import GoogleAnalytics from "@/components/google_analytics";
 import MainWrapper from "@/components/main_wrapper";
 import Backdrop from "@/components/backdrop";
+import Overlay from "@/components/overlay";
 
 const akshar = Akshar({ subsets: ["latin"] });
 
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <MainWrapper>
           <div className="items-between mx-auto flex max-w-2xl flex-col justify-between px-4">
             <Backdrop>
+              <Overlay />
               <header>
                 <div className="flex items-center justify-between">
                   <nav className="ml-auto space-x-6 text-sm font-medium">
