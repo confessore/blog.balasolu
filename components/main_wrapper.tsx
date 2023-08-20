@@ -6,7 +6,7 @@ export default function MainWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <main className="flex h-full min-h-screen min-w-full flex-col items-center justify-between gap-3 text-pink-900 dark:text-pink-200">
+    <main className="flex h-full min-h-screen min-w-full flex-col items-center justify-between gap-3 text-slate-950 dark:text-slate-50">
       <div className="fixed inset-0 -z-10 h-full w-full">
         <Image
           src={"https://balasolu.com/jwt.webp"}
