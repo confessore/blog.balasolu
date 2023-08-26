@@ -1,0 +1,229 @@
+---
+title: Entity Framework Core Type Discrimination
+description: Do you need to consolidate multiple derivatives of a base type to a single database table?
+date: 2023-08-26
+---
+
+There have been times when I needed concrete definitions of object models which are incredibly similar to one another.
+
+Often, these concrete definitions would end up in their own database tables creating clutter and appearing disorganized.
+
+Entity FrameWork Core includes some useful tools to allow for the consolidation of these object models as long as they are deriving from the same base types.
+
+Without further ado...
+
+## Enums
+
+In order to discriminate between types, an enum is required.
+
+I am defining this enum with two models in mind; A default and primary asset.
+
+`shared.Models.Enums.AssetType`
+
+```
+namespace shared.Models.Enums;
+
+public enum AssetType
+{
+    Default,
+    Primary
+}
+
+```
+
+## Interfaces
+
+Here, I am creating an interface for our abstraction to derive from.
+
+`shared.Models.Interfaces.IAsset.cs`
+
+```
+using shared.Models.Enums;
+
+namespace shared.Models.Interfaces;
+
+public interface IAsset
+{
+    string Id { get; set; }
+    AssetType AssetType { get; set; }
+}
+
+```
+
+## Abstractions
+
+Here, I am creating an abstract asset model.
+
+This abstract asset model derives from the asset interface which was created previously.
+
+Notice how I am attributing the abstraction a json converter definition as well as a json constructor definition.
+
+These will be defined after I am done defining the rest of the models.
+
+`shared.Models.Abstractions.Asset.cs`
+
+```
+using System.Text.Json.Serialization;
+using shared.Converters;
+using shared.Models.Enums;
+using shared.Models.Interfaces;
+
+namespace shared.Models.Abstractions;
+
+[JsonConverter(typeof(AssetConverter))]
+public abstract class Asset : IAsset
+{
+    [JsonConstructor]
+    public Asset() { }
+
+    public AssetType AssetType { get; set; }
+}
+
+```
+
+# Models
+
+This default asset model derives from the abstract asset model which was created previously.
+
+`shared.Models.DefaultAsset.cs`
+
+```
+using shared.Models.Abstractions;
+
+namespace shared.Models;
+
+public sealed class DefaultAsset : Asset { }
+
+```
+
+To illustrate this full concept, I am creating a primary asset model as well which also derives from the abstract asset model.
+
+`shared.Models.PrimaryAsset.cs`
+
+```
+using shared.Models.Abstractions;
+
+namespace shared.Models;
+
+public sealed class PrimaryAsset : Asset { }
+
+```
+
+# Converters
+
+Here is where the heavy lifting occurs.
+
+Remember when those attributes were defined on the abstract asset model?
+
+This is the logic that allows for the type discrimination.
+
+What happens here is an abstract asset model is read and the enum type value is utilized to determine concrete type json deserialization behavior.
+
+`shared.Converters.AssetConverter.cs`
+
+```
+using shared.Models.Abstractions;
+using shared.Models.Enums;
+using shared.Models;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace shared.Converters;
+
+public sealed class AssetConverter : JsonConverter<Asset>
+{
+    public override bool CanConvert(Type typeToConvert) =>
+        typeof(Asset).IsAssignableFrom(typeToConvert);
+
+    public override Asset? Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
+    {
+        var clone = reader;
+        while (clone.Read())
+        {
+            if (clone.TokenType == JsonTokenType.PropertyName)
+            {
+                var name = clone.GetString();
+                if (name != null)
+                {
+                    if (name.ToLower() == nameof(AssetType).ToLower())
+                        break;
+                }
+            }
+        }
+        clone.Read();
+        var type = (AssetType)clone.GetInt32();
+        return type switch
+        {
+            AssetType.Default => JsonSerializer.Deserialize<DefaultAsset>(ref reader, options),
+            AssetType.Primary => JsonSerializer.Deserialize<PrimaryAsset>(ref reader, options),
+            _ => null,
+        };
+    }
+
+    public override void Write(Utf8JsonWriter writer, Asset value, JsonSerializerOptions options) =>
+        JsonSerializer.Serialize(writer, value, value.GetType(), options);
+}
+
+```
+
+# Contexts
+
+So all of this has been leading up to here where I am now defining the entity framework core database context behavior for an api.
+
+The asset type enum is utilized to discriminate between the default and primary asset models.
+
+As long as those converter attributes are defined on the abstract asset model, the deserilization behavior will occur and whichever concrete type is defined will be returned.
+
+`api.Contexts.DefaultDbContext.cs`
+
+```
+using shared.Models;
+using shared.Models.Abstractions;
+using shared.Models.Enums;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.AspNetCore.Identity;
+
+namespace api.Contexts;
+
+public class DefaultDbContext : DbContext
+{
+    public DefaultDbContext(DbContextOptions<DefaultDbContext> options)
+        : base(options) { }
+
+    public DbSet<Asset>? Assets { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        var keysProperties = modelBuilder.Model
+            .GetEntityTypes()
+            .Select(x => x.FindPrimaryKey())
+            .SelectMany(x => x!.Properties);
+
+        foreach (var property in keysProperties)
+            property.ValueGenerated = ValueGenerated.OnAdd;
+
+        modelBuilder
+            .Entity<Asset>()
+            .ToTable("Assets")
+            .HasDiscriminator<AssetType>(nameof(AssetType))
+            .HasValue<DefaultAsset>(AssetType.Default)
+            .HasValue<PrimaryAsset>(AssetType.Primary)
+            .IsComplete();
+    }
+}
+
+```
+
+In this post, I have defined an enum which will allow discrimination between multiple similar concrete object models, an interface, an abstract base type, some concrete derivatives, a json converter as well as the database context model behavior.
+
+This post outlined how to consolidate multiple derivatives of a base type into one database table as to reduce clutter and increase organization.
+
+Following this content, you should be able to utilize Entity Framework Core to serialize and deserialize data to and from a single database table.
