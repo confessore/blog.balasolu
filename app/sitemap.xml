@@ -1,26 +1,30 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://blog.balasolu.com</loc>
-    <lastmod>2023-08-11T15:02:24.021Z</lastmod>
+    <lastmod>2023-08-12T00:00:00.000Z</lastmod>
   </url>
   <url>
     <loc>https://balasolu.com/</loc>
-    <lastmod>2023-08-11T15:02:24.021Z</lastmod>
+    <lastmod>2023-08-12T00:00:00.000Z</lastmod>
   </url>
   <url>
     <loc>https://blog.balasolu.com/posts/ef-type-discrimination</loc>
-    <lastmod>2023-08-11T15:02:24.021Z</lastmod>
+    <lastmod>2023-08-12T00:00:00.000Z</lastmod>
   </url>
   <url>
     <loc>https://blog.balasolu.com/posts/fake-check-scam</loc>
-    <lastmod>2023-08-11T15:02:24.021Z</lastmod>
+    <lastmod>2023-08-12T00:00:00.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.balasolu.com/posts/gpt-integration</loc>
+    <lastmod>2023-08-12T00:00:00.000Z</lastmod>
   </url>
   <url>
     <loc>https://blog.balasolu.com/posts/package-scam</loc>
-    <lastmod>2023-08-11T15:02:24.021Z</lastmod>
+    <lastmod>2023-08-12T00:00:00.000Z</lastmod>
   </url>
   <url>
     <loc>https://blog.balasolu.com/posts/upwork-fraud</loc>
-    <lastmod>2023-08-11T15:02:24.021Z</lastmod>
+    <lastmod>2023-08-12T00:00:00.000Z</lastmod>
   </url>
 </urlset>
