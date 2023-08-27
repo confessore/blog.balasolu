@@ -1,0 +1,257 @@
+---
+title: How to Integrate ChatGPT into ASP.NET Core
+description: Learn how to request chat completions from the OpenAI API using .NET Core and C#.
+date: 2023-08-27
+---
+
+Artificial intelligence is sweeping our world by storm and I am getting with the program!
+
+In this post, I will outline how to request chat completions from the OpenAI API using .NET Core and C#.
+
+Without further ado...
+
+# Models
+
+As most always, some models are required.
+
+I will be defining the data structures here and working backwards so that the details can be seen before the bigger picture takes shape.
+
+This model is utilized to parse the body of the post request made to the ASP.NET web application's API controller.
+
+`shared/Models/GPTChatCompletionPromptModel.cs`
+
+```
+namespace shared.Models;
+
+public class GPTChatCompletionPromptModel
+{
+    public string Prompt { get; set; } = string.Empty;
+}
+
+```
+
+This object displays token usage. It is useful for billing purposes as GPT is charged for per 1,000 tokens.
+
+A short paragraph consumes perhaps ~35 tokens.
+
+`shared/Models/GPTChatCompletionUsage.cs`
+
+```
+namespace shared.Models;
+
+public class GPTChatCompletionUsage
+{
+    public int Prompt_Tokens { get; set; }
+    public int Completion_Tokens { get; set; }
+    public int Total_Tokens { get; set; }
+}
+
+```
+
+This objct contains the text content of the response from the chat completion endpoint from the OpenAI API.
+
+`shared/Models/GPTChatCompletionChoiceMessage.cs`
+
+```
+namespace shared.Models;
+
+public class GPTChatCompletionChoiceMessage
+{
+    public string Role { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+}
+
+```
+
+This object is the child of an array which contains the text responses from the chat completion endpoint from the OpenAI API.
+
+Contextually, multiple chat completions can be processed from an individual request.
+
+`shared/Models/GPTChatCompletionChoice.cs`
+
+```
+namespace shared.Models;
+
+public class GPTChatCompletionChoice
+{
+    public int Index { get; set; }
+    public GPTChatCompletionChoiceMessage Message { get; set; } = new();
+    public string Finish_Reason { get; set; } = string.Empty;
+}
+
+```
+
+Finally, here is the parent object which arrives from the request response.
+
+It contains some metadata as well as prompted generated content.
+
+`shared/Models/GPTChatCompletion.cs`
+
+```
+namespace shared.Models;
+
+public class GPTChatCompletion
+{
+    public string Id { get; set; } = string.Empty;
+    public string Object { get; set; } = string.Empty;
+    public int Created { get; set; }
+    public string Model { get; set; } = string.Empty;
+    public GPTChatCompletionChoice[] Choices { get; set; } = new GPTChatCompletionChoice[1];
+    public GPTChatCompletionUsage Usage { get; set; } = new();
+}
+
+```
+
+# Services
+
+So now that I have defined the object models that are required to perform these transactions, I need to define some services with which to register with the application's dependency injection container.
+
+I will begin with an interface.
+
+`api/Services/Interfaces/IGPTService.cs`
+
+```
+namespace api.Services.Interfaces;
+
+public interface IGPTService
+{
+    Task<string> RequestGPTChatCompletionAsync(string prompt);
+}
+
+```
+
+After creating the interface, I will create a concrete implementation of the interface so that there is some behavior logic to execute.
+
+Take care to notice how I am utilizing `IHttpClientFactory` to spawn `HTTPClient`. This is an absolute necessity as to evade and avoid port exhaustion which is a critial consequence to impromperly implementing `HTTPClient`.
+
+`api/Services/GPTService.cs`
+
+```
+using System.Text;
+using System.Text.Json;
+using api.Services.Interfaces;
+using shared.Models;
+
+namespace api.Services;
+
+sealed class GPTService : IGPTService
+{
+    readonly IHttpClientFactory _httpClientFactory;
+
+    public GPTService(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
+    }
+
+    public async Task<string> RequestGPTChatCompletionAsync(string prompt)
+    {
+        var data = new
+        {
+            model = "gpt-3.5-turbo",
+            messages = new[] { new { role = "user", content = prompt } },
+            temperature = 0.5
+        };
+        var json = JsonSerializer.Serialize(data);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        using var httpClient = _httpClientFactory.CreateClient(nameof(GPTService));
+        try
+        {
+            var response = await httpClient.PostAsync(string.Empty, content);
+            if (response.IsSuccessStatusCode)
+            {
+                json = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
+                var gpt = JsonSerializer.Deserialize<GPTChatCompletion>(json, options);
+                string text = gpt.Choices[0].Message.Content;
+                return text;
+            }
+            else
+            {
+                return $"Request failed with status code {response.StatusCode}";
+            }
+        }
+        catch (Exception e)
+        {
+            return e.Message;
+        }
+    }
+}
+
+```
+
+# Controllers
+
+At this moment, I will define the web application's API endpoint which will accept requests and respond with OpenAI's chat completion.
+
+`api/Controllers/GPTController.cs`
+
+```
+using Microsoft.AspNetCore.Mvc;
+using api.Services.Interfaces;
+using shared.Models;
+
+namespace api.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class GPTController : ControllerBase
+{
+    readonly IGPTService _gptService;
+
+    public GPTController(IGPTService gptService)
+    {
+        _gptService = gptService;
+    }
+
+    [HttpPost]
+    public async Task<string> ChatCompletionAsync(
+        [FromBody] GPTChatCompletionPromptModel gptChatCompletionPromptModel
+    ) => await _gptService.RequestGPTChatCompletionAsync(gptChatCompletionPromptModel.Prompt);
+}
+
+```
+
+# Root
+
+Everything is defined. It all simply needs to be tied together with dependency injection container registrations.
+
+Since I am utilizing a .NET7 `WebHost` builder on ASP.NET Core using C#, I can add a singleton `IHttpClientFactory` as well as a scoped `IGPTService` like so.
+
+`api/Program.cs`
+
+```
+...
+
+builder.Services.AddHttpClient<IGPTService, GPTService>(
+    nameof(GPTService),
+    options =>
+    {
+        options.BaseAddress = new Uri("https://api.openai.com/v1/chat/completions");
+        options.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            Environment.GetEnvironmentVariable("GPT_SECRET")
+        );
+    }
+);
+builder.Services.AddScoped<IGPTService, GPTService>();
+
+...
+
+```
+
+# Endpoint
+
+I already have my environment set up with my `GPT_SECRET` so all that I need to do now is navigate to the included Swagger page which for me is located at `http://api.localhost/swagger`.
+
+With the GPT endpoint, I provide a prompt and click execute.
+
+<Image
+    src="/gpt-integration.png"
+    width={512}
+    height={256}
+    alt="How to Integrate ChatGPT into ASP.NET Core"
+/>
+
+In this post, I outlined how to request chat completions from the OpenAI API using .NET Core and C#.
+
+😎
