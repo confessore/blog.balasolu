@@ -6,17 +6,17 @@ date: 2023-08-30
 
 Have you tried to access the host machine from an Android emulator before?
 
-You probably discovered that the default possibility is by utilizing `10.0.2.2`.
+You probably discovered that the default possibility is by utilizing **10.0.2.2**.
 
 So what if you need to utilize a fully qualified domain name in your development environment?
 
-Did you already know that Android OS is a flavor of linux and that there exists a `/etc/hosts` file?
+Did you already know that Android OS is a flavor of linux and that there exists a **/etc/hosts** file?
 
 I'm going to teach you how to modify this hosts file so that you can access resources on your host machine.
 
 First, you need to navigate to the folder in which your Android emulator is located.
 
-For me, on an Apple M1, the SDK emulator is located at `/Users/confessore/Library/Android/sdk/emulator`.
+For me, on an Apple M1, the SDK emulator is located at **/Users/confessore/Library/Android/sdk/emulator**.
 
 I'll list out which Android Virtual Devices (AVD) are ready by issuing this command.
 
@@ -25,7 +25,7 @@ I'll list out which Android Virtual Devices (AVD) are ready by issuing this comm
 
 ```
 
-In this example, I received a response of `pixel_5_-_api_33` which will be used in the next step.
+In this example, I received a response of **pixel_5_-_api_33** which will be used in the next step.
 
 To modify the hosts file on the Android emulator, a writable instance must be initialized.
 

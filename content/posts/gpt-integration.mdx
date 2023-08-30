@@ -18,7 +18,7 @@ I will be defining the data structures here and working backwards so that the de
 
 This model is utilized to parse the body of the post request made to the ASP.NET web application's API controller.
 
-`shared/Models/GPTChatCompletionPromptModel.cs`
+**shared/Models/GPTChatCompletionPromptModel.cs**
 
 ```
 namespace shared.Models;
@@ -34,7 +34,7 @@ This object displays token usage. It is useful for billing purposes as GPT is ch
 
 A short paragraph consumes perhaps ~35 tokens.
 
-`shared/Models/GPTChatCompletionUsage.cs`
+**shared/Models/GPTChatCompletionUsage.cs**
 
 ```
 namespace shared.Models;
@@ -50,7 +50,7 @@ public class GPTChatCompletionUsage
 
 This objct contains the text content of the response from the chat completion endpoint from the OpenAI API.
 
-`shared/Models/GPTChatCompletionChoiceMessage.cs`
+**shared/Models/GPTChatCompletionChoiceMessage.cs**
 
 ```
 namespace shared.Models;
@@ -67,7 +67,7 @@ This object is the child of an array which contains the text responses from the 
 
 Contextually, multiple chat completions can be processed from an individual request.
 
-`shared/Models/GPTChatCompletionChoice.cs`
+**shared/Models/GPTChatCompletionChoice.cs**
 
 ```
 namespace shared.Models;
@@ -85,7 +85,7 @@ Finally, here is the parent object which arrives from the request response.
 
 It contains some metadata as well as prompted generated content.
 
-`shared/Models/GPTChatCompletion.cs`
+**shared/Models/GPTChatCompletion.cs**
 
 ```
 namespace shared.Models;
@@ -108,7 +108,7 @@ So now that I have defined the object models that are required to perform these 
 
 I will begin with an interface.
 
-`api/Services/Interfaces/IGPTService.cs`
+**api/Services/Interfaces/IGPTService.cs**
 
 ```
 namespace api.Services.Interfaces;
@@ -122,9 +122,9 @@ public interface IGPTService
 
 After creating the interface, I will create a concrete implementation of the interface so that there is some behavior logic to execute.
 
-Take care to notice how I am utilizing `IHttpClientFactory` to spawn `HTTPClient`. This is an absolute necessity as to evade and avoid port exhaustion which is a critial consequence to impromperly implementing `HTTPClient`.
+Take care to notice how I am utilizing **IHttpClientFactory** to spawn **HttpClient**. This is an absolute necessity as to evade and avoid port exhaustion which is a critial consequence to impromperly implementing **HttpClient**.
 
-`api/Services/GPTService.cs`
+**api/Services/GPTService.cs**
 
 ```
 using System.Text;
@@ -183,7 +183,7 @@ sealed class GPTService : IGPTService
 
 At this moment, I will define the web application's API endpoint which will accept requests and respond with OpenAI's chat completion.
 
-`api/Controllers/GPTController.cs`
+**api/Controllers/GPTController.cs**
 
 ```
 using Microsoft.AspNetCore.Mvc;
@@ -215,9 +215,9 @@ public class GPTController : ControllerBase
 
 Everything is defined. It all simply needs to be tied together with dependency injection container registrations.
 
-Since I am utilizing a .NET7 `WebHost` builder on ASP.NET Core using C#, I can add a singleton `IHttpClientFactory` as well as a scoped `IGPTService` like so.
+Since I am utilizing a .NET7 **WebHost** builder on ASP.NET Core using C#, I can add a singleton **IHttpClientFactory** as well as a scoped **IGPTService** like so.
 
-`api/Program.cs`
+**api/Program.cs**
 
 ```
 ...
@@ -241,7 +241,7 @@ builder.Services.AddScoped<IGPTService, GPTService>();
 
 # Endpoint
 
-I already have my environment set up with my `GPT_SECRET` so all that I need to do now is navigate to the included Swagger page which for me is located at `http://api.localhost/swagger`.
+I already have my environment set up with my **GPT_SECRET** so all that I need to do now is navigate to the included Swagger page which for me is located at **http://api.localhost/swagger**.
 
 With the GPT endpoint, I provide a prompt and click execute.
 

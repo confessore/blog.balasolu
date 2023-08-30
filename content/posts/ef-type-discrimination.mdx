@@ -18,7 +18,7 @@ In order to discriminate between types, an enum is required.
 
 I am defining this enum with two models in mind; A default and primary asset.
 
-`shared/Models/Enums/AssetType.cs`
+**shared/Models/Enums/AssetType.cs**
 
 ```
 namespace shared.Models.Enums;
@@ -35,7 +35,7 @@ public enum AssetType
 
 Here, I am creating an interface for our abstraction to derive from.
 
-`shared/Models/Interfaces/IAsset.cs`
+**shared/Models/Interfaces/IAsset.cs**
 
 ```
 using shared.Models.Enums;
@@ -60,7 +60,7 @@ Notice how I am attributing the abstraction a json converter definition as well 
 
 These will be defined after I am done defining the rest of the models.
 
-`shared/Models/Abstractions/Asset.cs`
+**shared/Models/Abstractions/Asset.cs**
 
 ```
 using System.Text.Json.Serialization;
@@ -85,7 +85,7 @@ public abstract class Asset : IAsset
 
 This default asset model derives from the abstract asset model which was created previously.
 
-`shared/Models/DefaultAsset.cs`
+**shared/Models/DefaultAsset.cs**
 
 ```
 using shared.Models.Abstractions;
@@ -98,7 +98,7 @@ public sealed class DefaultAsset : Asset { }
 
 To illustrate this full concept, I am creating a primary asset model as well which also derives from the abstract asset model.
 
-`shared/Models/PrimaryAsset.cs`
+**shared/Models/PrimaryAsset.cs**
 
 ```
 using shared.Models.Abstractions;
@@ -119,7 +119,7 @@ This is the logic that allows for the type discrimination.
 
 What happens here is an abstract asset model is read and the enum type value is utilized to determine concrete type json deserialization behavior.
 
-`shared/Converters/AssetConverter.cs`
+**shared/Converters/AssetConverter.cs**
 
 ```
 using shared.Models.Abstractions;
@@ -178,7 +178,7 @@ The asset type enum is utilized to discriminate between the default and primary 
 
 As long as those converter attributes are defined on the abstract asset model, the deserialization behavior will occur and whichever concrete type is defined will be returned.
 
-`api/Contexts/DefaultDbContext.cs`
+**api/Contexts/DefaultDbContext.cs**
 
 ```
 using shared.Models;
