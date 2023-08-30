@@ -1,0 +1,81 @@
+---
+title: How to Modify Android Emulator Hosts File
+description: Accessing the host machine from the Android emulator is easier than you think...
+date: 2023-08-30
+---
+
+Have you tried to access the host machine from an Android emulator before?
+
+You probably discovered that the default possibility is by utilizing `10.0.2.2`.
+
+So what if you need to utilize a fully qualified domain name in your development environment?
+
+Did you already know that Android OS is a flavor of linux and that there exists a `/etc/hosts` file?
+
+I'm going to teach you how to modify this hosts file so that you can access resources on your host machine.
+
+First, you need to navigate to the folder in which your Android emulator is located.
+
+For me, on an Apple M1, the SDK emulator is located at `/Users/confessore/Library/Android/sdk/emulator`.
+
+I'll list out which Android Virtual Devices (AVD) are ready by issuing this command.
+
+```
+./emulator -list-avds
+
+```
+
+In this example, I received a response of `pixel_5_-_api_33` which will be used in the next step.
+
+To modify the hosts file on the Android emulator, a writable instance must be initialized.
+
+This command starts an AVD with an editable filesystem in my environment. You may need to change the AVD input to reflect the name of your AVD.
+```
+./emulator -avd pixel_5_-_api_33 -writable-system
+
+```
+
+The emulator will start and while you're waiting for it to fully initialize, go ahead and open another terminal window.
+
+In this new terminal window, I'll issue a few ADB commands which will allow me to modify the hosts file.
+
+These commands are simply granting root access to and remounting the emulator's filesystem.
+```
+adb root
+adb remount
+
+```
+
+This command pulls the existing hosts file from the emulator's filesystem and saves it to the desktop.
+```
+adb pull /etc/hosts ~/Desktop/hosts
+
+```
+
+For my current purposes, I am editing the hosts file that was just now saved to my desktop so that it looks like this.
+
+Of course, modify it as necessary for your own particular requirements.
+
+Note: The blank line at the end may be required for full functionality.
+```
+127.0.0.1       localhost
+::1             ip6-localhost
+10.0.2.2	host.localhost
+10.0.2.2	api.localhost
+
+```
+
+After modifying the pulled hosts file, it can be pushed back to the emulator.
+```
+adb push ~/Desktop/hosts /etc/hosts
+
+```
+Possibly Optional: It *should* be immediately picked up by the Android operating system with no further required commands however you may need to issue this final command.
+```
+adb reboot
+
+```
+
+And that's it! The host machine should now be accessible from the Android emulator via domain name resolution.
+
+Please keep in mind that this process will need to be repeated every time you close and reopen the Android emulator. This modification is not persisted.
