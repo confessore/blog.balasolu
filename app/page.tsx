@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="prose dark:prose-invert max-w-full">
+    <div className="prose max-w-full dark:prose-invert">
       {allPosts
         .sort((x, y) => Date.parse(y.date) - Date.parse(x.date))
         .map((post) => (
